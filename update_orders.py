@@ -16,7 +16,13 @@ def connect_db():
 
 # Add an order for a user
 def add_order(username, product_name, quantity):
+    conn = None
+    cur = None
     try:
+        if quantity is None or int(quantity) <= 0:
+            print("Quantity must be a positive integer.")
+            return
+
         conn = connect_db()
         cur = conn.cursor()
 
@@ -46,13 +52,27 @@ def add_order(username, product_name, quantity):
 
     except Exception as e:
         print("An error occurred:", e)
-        conn.rollback()
+        if conn:
+            try:
+                conn.rollback()
+            except Exception:
+                pass
     finally:
-        cur.close()
-        conn.close()
+        if cur:
+            try:
+                cur.close()
+            except Exception:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 # Show how much each user spent
 def show_total_spent():
+    conn = None
+    cur = None
     try:
         conn = connect_db()
         cur = conn.cursor()
@@ -74,8 +94,16 @@ def show_total_spent():
     except Exception as e:
         print("An error occurred:", e)
     finally:
-        cur.close()
-        conn.close()
+        if cur:
+            try:
+                cur.close()
+            except Exception:
+                pass
+        if conn:
+            try:
+                conn.close()
+            except Exception:
+                pass
 
 def search_users_by_name(name):
     # Search user from database
@@ -102,6 +130,7 @@ def search_users_by_name(name):
         conn.close()
 
 
+
 # Argument parsing
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage Orders for the StoreDB")
@@ -110,7 +139,6 @@ if __name__ == "__main__":
     parser.add_argument('--quantity', type=int, help="Quantity of the product")
     parser.add_argument('--show-spending', action='store_true', help="Display how much each customer spent")
     parser.add_argument('--search', type=str, help="Search users by name")
-
     args = parser.parse_args()
 
     if args.user and args.product and args.quantity:
